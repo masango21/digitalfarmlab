@@ -17,6 +17,7 @@ export function PrimaryButton({ children, onPress, disabled = false, secondary =
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
       style={({ pressed }) => [

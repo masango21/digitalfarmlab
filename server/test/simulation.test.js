@@ -32,6 +32,26 @@ test('reduced irrigation reports yield, water, cost, and score outcomes', () => 
   });
 });
 
+test('water-saving scenarios prioritize lower irrigation use', () => {
+  const waterSaving = { ...scenario, id: 'water-saving' };
+  const outcome = calculateOutcome(waterSaving, 80, 100);
+
+  assert.equal(outcome.yieldKg, 4400);
+  assert.equal(outcome.waterLiters, 10680);
+  assert.equal(outcome.cost, 1648.8);
+  assert.equal(outcome.score, 57);
+});
+
+test('soil-health scenarios reward balanced fertilizer use', () => {
+  const soilHealth = { ...scenario, id: 'soil-health' };
+  const outcome = calculateOutcome(soilHealth, 100, 150);
+
+  assert.equal(outcome.yieldKg, 4950);
+  assert.equal(outcome.waterLiters, 12000);
+  assert.equal(outcome.cost, 2142);
+  assert.equal(outcome.score, 59);
+});
+
 test('score remains bounded at zero and one hundred', () => {
   for (const irrigation of [0, 50, 100, 150, 200]) {
     for (const fertilizer of [0, 50, 100, 150, 200]) {

@@ -1,4 +1,6 @@
 const PRODUCTION_SYSTEMS = new Set(['rainfed', 'irrigated', 'mixed']);
+const FARM_TYPES = new Set(['smallholder', 'commercial', 'subsistence', 'research', 'educational', 'mixed']);
+const MAX_MAIN_CROPS = 20;
 
 function validateFarmInput(input, partial = false) {
   if ((!partial || input.name !== undefined)
@@ -14,6 +16,27 @@ function validateFarmInput(input, partial = false) {
   if (input.location !== undefined && input.location !== null
       && (typeof input.location !== 'string' || input.location.length > 200)) {
     return 'Location must be 200 characters or fewer';
+  }
+  if (input.region !== undefined && input.region !== null
+      && (typeof input.region !== 'string' || !input.region.trim() || input.region.trim().length > 100)) {
+    return 'Region must be between 1 and 100 characters';
+  }
+  if (input.farmType !== undefined && !FARM_TYPES.has(input.farmType)) {
+    return 'Farm type must be smallholder, commercial, subsistence, research, educational, or mixed';
+  }
+  if (input.mainCrops !== undefined) {
+    if (!Array.isArray(input.mainCrops) || input.mainCrops.length > MAX_MAIN_CROPS) {
+      return `Main crops must be a list of no more than ${MAX_MAIN_CROPS} crops`;
+    }
+    const seenCrops = new Set();
+    for (const crop of input.mainCrops) {
+      if (typeof crop !== 'string' || !crop.trim() || crop.trim().length > 80) {
+        return 'Each main crop must be between 1 and 80 characters';
+      }
+      const normalizedCrop = crop.trim().toLowerCase();
+      if (seenCrops.has(normalizedCrop)) return 'Main crops cannot contain duplicates';
+      seenCrops.add(normalizedCrop);
+    }
   }
   if (input.productionSystem !== undefined && !PRODUCTION_SYSTEMS.has(input.productionSystem)) {
     return 'Production system must be rainfed, irrigated, or mixed';
@@ -69,4 +92,4 @@ function parseCoordinate(value) {
   return Number.NaN;
 }
 
-module.exports = { validateFarmInput, validateFieldInput };
+module.exports = { validateFarmInput, validateFieldInput, MAX_MAIN_CROPS };

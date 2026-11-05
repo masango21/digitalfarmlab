@@ -4,6 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { AppScreen } from '@/components/ui/app-screen';
+import { ContentState } from '@/components/ui/content-state';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { apiRequest } from '@/lib/api';
@@ -21,17 +22,20 @@ export default function SimulationRunsScreen() {
   const theme = useTheme();
   const [runs, setRuns] = useState<Run[]>([]);
   const [error, setError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     apiRequest<{ runs: Run[] }>('/scenarios/runs')
       .then((response) => setRuns(response.runs))
-      .catch((loadError: unknown) => setError(loadError instanceof Error ? loadError.message : 'Unable to load results'));
+      .catch((loadError: unknown) => setError(loadError instanceof Error ? loadError.message : 'Unable to load results'))
+      .finally(() => setLoading(false));
   }, []);
 
   return (
-    <AppScreen title="Past simulations" subtitle="Review your recent experiments.">
-      {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}
-      {!runs.length && !error ? <ThemedText themeColor="textSecondary">No simulations yet.</ThemedText> : null}
+    <AppScreen title="Results" subtitle="Review your recent experiments.">
+      {loading ? <ContentState variant="loading" message="Loading results…" /> : null}
+      {error ? <ContentState variant="error" title="Unable to load results" message={error} /> : null}
+      {!loading && !runs.length && !error ? <ContentState variant="empty" title="No results yet" message="Run a scenario to start building your learning history." /> : null}
       {runs.map((run) => (
         <Pressable
           key={run.id}
@@ -51,7 +55,7 @@ export default function SimulationRunsScreen() {
           style={[styles.run, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
           <View style={styles.runHeading}>
             <ThemedText type="smallBold">{run.scenario_name}</ThemedText>
-            <ThemedText type="smallBold" style={{ color: theme.primary }}>{Number(run.score)} / 100</ThemedText>
+            <ThemedText type="smallBold" style={{ color: theme.primaryText }}>{Number(run.score)} / 100</ThemedText>
           </View>
           <ThemedText type="small" themeColor="textSecondary">{new Date(run.created_at).toLocaleString()}</ThemedText>
         </Pressable>
@@ -63,5 +67,4 @@ export default function SimulationRunsScreen() {
 const styles = StyleSheet.create({
   run: { padding: Spacing.three, borderRadius: 16, borderWidth: 1, gap: Spacing.two },
   runHeading: { flexDirection: 'row', justifyContent: 'space-between', gap: Spacing.two },
-  error: { color: '#B3261E' },
 });

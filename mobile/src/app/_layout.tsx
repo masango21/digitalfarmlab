@@ -5,7 +5,7 @@ import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { AuthProvider, useAuth } from '@/lib/auth';
-import { Colors } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 
 SplashScreen.preventAutoHideAsync().catch((error: unknown) => {
   console.error('Unable to keep the splash screen visible during session restoration', error);
@@ -23,6 +23,7 @@ export default function RootLayout() {
 
 function RootNavigator() {
   const { ready } = useAuth();
+  const theme = useTheme();
 
   useEffect(() => {
     if (ready) {
@@ -34,8 +35,8 @@ function RootNavigator() {
 
   if (!ready) {
     return (
-      <View style={styles.loading}>
-        <ActivityIndicator color={Colors.light.primary} size="large" />
+      <View style={[styles.loading, { backgroundColor: theme.background }]}>
+        <ActivityIndicator color={theme.accent} size="large" />
       </View>
     );
   }
@@ -53,6 +54,5 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: Colors.light.background,
   },
 });

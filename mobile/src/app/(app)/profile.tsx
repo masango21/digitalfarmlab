@@ -8,7 +8,8 @@ import { ThemedText } from '@/components/themed-text';
 import { AppScreen } from '@/components/ui/app-screen';
 import { PrimaryButton } from '@/components/ui/primary-button';
 import { StatCard } from '@/components/ui/stat-card';
-import { Colors, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/lib/auth';
 import { apiRequest } from '@/lib/api';
 
@@ -16,7 +17,7 @@ interface Profile {
   id: string;
   display_name: string;
   email: string;
-  role: 'learner' | 'trainer';
+  role: 'learner' | 'trainer' | 'admin';
   avatar_url: string | null;
   farm_count: number;
   simulation_count: number;
@@ -29,6 +30,7 @@ interface ProfileResponse {
 }
 
 export default function ProfileScreen() {
+  const theme = useTheme();
   const { user, logout } = useAuth();
   const [profile, setProfile] = useState<Profile | null>(null);
   const [scores, setScores] = useState<ProfileResponse['scores']>([]);
@@ -102,13 +104,13 @@ export default function ProfileScreen() {
         {profile?.avatar_url ? (
           <Image source={{ uri: profile.avatar_url }} style={styles.avatar} />
         ) : (
-          <View style={[styles.avatar, styles.avatarPlaceholder]}>
-            <ThemedText type="subtitle" style={styles.avatarText}>{(profile?.display_name || user?.display_name || 'F').slice(0, 1)}</ThemedText>
+          <View style={[styles.avatar, styles.avatarPlaceholder, { backgroundColor: theme.backgroundSelected }]}>
+            <ThemedText type="subtitle" style={{ color: theme.primaryText }}>{(profile?.display_name || user?.display_name || 'F').slice(0, 1)}</ThemedText>
           </View>
         )}
-        <Pressable onPress={changeAvatar}><ThemedText type="smallBold" style={styles.changePhoto}>Change photo</ThemedText></Pressable>
+        <Pressable accessibilityRole="button" onPress={changeAvatar}><ThemedText type="smallBold" style={{ color: theme.primaryText }}>Change photo</ThemedText></Pressable>
         <ThemedText type="smallBold">{profile?.email || user?.email}</ThemedText>
-        <ThemedText type="small" style={styles.role}>{profile?.role || user?.role}</ThemedText>
+        <ThemedText type="small" style={{ color: theme.primaryText, textTransform: 'capitalize' }}>{profile?.role || user?.role}</ThemedText>
       </View>
 
       <View style={styles.stats}>
@@ -118,21 +120,21 @@ export default function ProfileScreen() {
 
       <View style={styles.form}>
         <ThemedText type="smallBold">Display name</ThemedText>
-        <TextInput value={displayName} onChangeText={setDisplayName} style={styles.input} />
+        <TextInput value={displayName} onChangeText={setDisplayName} style={[styles.input, { borderColor: theme.border, backgroundColor: theme.card, color: theme.text }]} />
         <PrimaryButton onPress={saveName} disabled={saving}>{saving ? 'Saving…' : 'Save changes'}</PrimaryButton>
       </View>
 
       <ThemedText type="smallBold">Recent scores</ThemedText>
       {scores.length ? scores.map((score, index) => (
-        <View key={`${score.created_at}-${index}`} style={styles.scoreRow}>
+        <View key={`${score.created_at}-${index}`} style={[styles.scoreRow, { borderBottomColor: theme.border }]}>
           <ThemedText type="small">{score.scenario_name}</ThemedText>
           <ThemedText type="smallBold">{score.value} / 100</ThemedText>
         </View>
       )) : <ThemedText type="small" themeColor="textSecondary">Run your first scenario to build your history.</ThemedText>}
-      <Link href="/(app)/cohorts" style={styles.cohortLink}>
+      <Link href="/(app)/cohorts" style={[styles.cohortLink, { color: theme.primaryText }]}>
         {profile?.role === 'trainer' ? 'Manage trainer cohorts' : 'My learning cohorts'}
       </Link>
-      {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}
+      {error ? <ThemedText style={{ color: theme.error }}>{error}</ThemedText> : null}
       <PrimaryButton onPress={signOut} secondary>Sign out</PrimaryButton>
     </AppScreen>
   );
@@ -141,14 +143,10 @@ export default function ProfileScreen() {
 const styles = StyleSheet.create({
   profileHeader: { alignItems: 'center', gap: Spacing.two, padding: Spacing.three },
   avatar: { width: 92, height: 92, borderRadius: 46 },
-  avatarPlaceholder: { alignItems: 'center', justifyContent: 'center', backgroundColor: '#D8EED6' },
-  avatarText: { color: '#2E7D32' },
-  changePhoto: { color: '#2E7D32' },
-  role: { textTransform: 'capitalize', color: '#2E7D32' },
+  avatarPlaceholder: { alignItems: 'center', justifyContent: 'center' },
   stats: { flexDirection: 'row', gap: Spacing.two },
   form: { gap: Spacing.two },
-  input: { borderWidth: 1, borderColor: Colors.light.border, backgroundColor: '#FFFFFF', padding: Spacing.three, borderRadius: 14, color: Colors.light.text },
-  scoreRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: Spacing.two, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: Colors.light.border },
-  cohortLink: { color: '#2E7D32', fontWeight: '700', paddingVertical: Spacing.two },
-  error: { color: '#B3261E' },
+  input: { borderWidth: 1, padding: Spacing.three, borderRadius: 14 },
+  scoreRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: Spacing.two, borderBottomWidth: StyleSheet.hairlineWidth },
+  cohortLink: { fontWeight: '700', paddingVertical: Spacing.two },
 });

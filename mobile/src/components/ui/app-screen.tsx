@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
-import { Spacing } from '@/constants/theme';
+import { MaxContentWidth, Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 
 interface AppScreenProps extends PropsWithChildren {
@@ -32,8 +32,15 @@ export function AppScreen({ title, subtitle, action, children }: AppScreenProps)
 
 const styles = StyleSheet.create({
   safeArea: { flex: 1 },
-  content: { padding: Spacing.three, gap: Spacing.three, paddingBottom: Spacing.five },
+  content: {
+    width: '100%',
+    maxWidth: MaxContentWidth,
+    alignSelf: 'center',
+    padding: Spacing.three,
+    gap: Spacing.three,
+    paddingBottom: Spacing.five,
+  },
   heading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two },
   headingText: { flex: 1, gap: Spacing.one },
-  title: { fontSize: 28, lineHeight: 34 },
+  title: { fontSize: 26, lineHeight: 32 },
 });

@@ -6,7 +6,7 @@ import { ThemedText } from '@/components/themed-text';
 import { AppScreen } from '@/components/ui/app-screen';
 import { PrimaryButton } from '@/components/ui/primary-button';
 import { ScenarioSlider } from '@/components/ui/scenario-slider';
-import { Colors, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { apiRequest } from '@/lib/api';
 import { useTheme } from '@/hooks/use-theme';
 
@@ -85,7 +85,7 @@ export default function SimulationScreen() {
             <Pressable
               key={scenario.id}
               onPress={() => setScenarioId(scenario.id)}
-              style={[styles.scenario, { backgroundColor: selected ? theme.backgroundSelected : theme.backgroundElement, borderColor: selected ? theme.primary : theme.border }]}>
+              style={[styles.scenario, { backgroundColor: selected ? theme.backgroundSelected : theme.backgroundElement, borderColor: selected ? theme.primaryText : theme.border }]}>
               <ThemedText type="smallBold">{scenario.name}</ThemedText>
               <ThemedText type="small" themeColor="textSecondary">{scenario.description}</ThemedText>
             </Pressable>
@@ -100,15 +100,18 @@ export default function SimulationScreen() {
         <ScenarioSlider label="Fertilizer" value={fertilizerPercent} onChange={setFertilizerPercent} />
         <View style={styles.dateField}>
           <ThemedText type="smallBold">Planting date (optional)</ThemedText>
-          <TextInput value={plantingDate} onChangeText={setPlantingDate} placeholder="YYYY-MM-DD" style={styles.dateInput} />
+          <TextInput value={plantingDate} onChangeText={setPlantingDate} placeholder="YYYY-MM-DD" placeholderTextColor={theme.textSecondary} style={[styles.dateInput, { borderColor: theme.border, backgroundColor: theme.card, color: theme.text }]} />
         </View>
       </View>
-      {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}
+      {error ? <ThemedText style={{ color: theme.error }}>{error}</ThemedText> : null}
       <PrimaryButton onPress={runSimulation} disabled={running || !scenarios.length}>
         {running ? 'Running…' : 'Run simulation'}
       </PrimaryButton>
+      <Pressable onPress={() => router.push('/(app)/scenario-library' as never)} style={styles.history}>
+        <ThemedText type="smallBold" style={{ color: theme.primaryText }}>Browse scenario library</ThemedText>
+      </Pressable>
       <Pressable onPress={() => router.push('/(app)/simulate/runs')} style={styles.history}>
-        <ThemedText type="smallBold" style={{ color: theme.primary }}>View past results</ThemedText>
+        <ThemedText type="smallBold" style={{ color: theme.primaryText }}>View past results</ThemedText>
       </Pressable>
     </AppScreen>
   );
@@ -118,8 +121,7 @@ const styles = StyleSheet.create({
   scenarioList: { gap: Spacing.two },
   scenario: { borderWidth: 1, borderRadius: 16, padding: Spacing.three, gap: Spacing.one },
   panel: { padding: Spacing.three, borderRadius: 18, borderWidth: 1, gap: Spacing.three },
-  error: { color: '#B3261E' },
   history: { alignItems: 'center', padding: Spacing.two },
   dateField: { gap: Spacing.one },
-  dateInput: { borderWidth: 1, borderColor: Colors.light.border, backgroundColor: '#FFFFFF', padding: Spacing.two, borderRadius: 12, color: Colors.light.text },
+  dateInput: { borderWidth: 1, padding: Spacing.two, borderRadius: 12 },
 });

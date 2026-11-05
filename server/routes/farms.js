@@ -29,6 +29,9 @@ router.post('/', async (req, res, next) => {
     latitude = null,
     longitude = null,
     productionSystem = 'mixed',
+    region = null,
+    farmType = 'mixed',
+    mainCrops = [],
     imageUrl = null,
   } = req.body || {};
   const validationError = validateFarmInput({
@@ -38,6 +41,9 @@ router.post('/', async (req, res, next) => {
     latitude,
     longitude,
     productionSystem,
+    region,
+    farmType,
+    mainCrops,
   });
   if (validationError) {
     res.status(400).json({ error: validationError });
@@ -47,9 +53,14 @@ router.post('/', async (req, res, next) => {
   try {
     const area = Number(areaHectares);
     const result = await query(
-      `INSERT INTO farms (user_id, name, location, area_hectares, latitude, longitude, production_system, image_url)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-      [req.user.id, name.trim(), location?.trim() || null, area, latitude, longitude, productionSystem, imageUrl],
+      `INSERT INTO farms (
+         user_id, name, location, area_hectares, latitude, longitude,
+         production_system, region, farm_type, main_crops, image_url
+       ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11) RETURNING *`,
+      [
+        req.user.id, name.trim(), location?.trim() || null, area, latitude, longitude,
+        productionSystem, region?.trim() || null, farmType, mainCrops.map((crop) => crop.trim()), imageUrl,
+      ],
     );
     res.status(201).json({ farm: result.rows[0] });
   } catch (error) {
@@ -89,7 +100,10 @@ router.get('/:id', async (req, res, next) => {
 });
 
 router.patch('/:id', async (req, res, next) => {
-  const { name, location, areaHectares, latitude, longitude, productionSystem, imageUrl } = req.body || {};
+  const {
+    name, location, areaHectares, latitude, longitude, productionSystem,
+    region, farmType, mainCrops, imageUrl,
+  } = req.body || {};
   const validationError = validateFarmInput({
     name,
     location,
@@ -97,6 +111,9 @@ router.patch('/:id', async (req, res, next) => {
     latitude,
     longitude,
     productionSystem,
+    region,
+    farmType,
+    mainCrops,
   }, true);
   if (validationError) {
     res.status(400).json({ error: validationError });
@@ -117,6 +134,9 @@ router.patch('/:id', async (req, res, next) => {
          longitude = CASE WHEN $9::boolean THEN $10 ELSE longitude END,
          image_url = CASE WHEN $11::boolean THEN $12 ELSE image_url END,
          production_system = CASE WHEN $13::boolean THEN $14 ELSE production_system END,
+         region = CASE WHEN $15::boolean THEN $16 ELSE region END,
+         farm_type = COALESCE($17, farm_type),
+         main_crops = COALESCE($18::text[], main_crops),
          updated_at = now()
        WHERE id = $1 AND user_id = $2 RETURNING *`,
       [
@@ -124,6 +144,8 @@ router.patch('/:id', async (req, res, next) => {
         location !== undefined, location, area ?? null,
         latitude !== undefined, latitude, longitude !== undefined, longitude,
         imageUrl !== undefined, imageUrl, productionSystem !== undefined, productionSystem,
+        region !== undefined, region?.trim() || null, farmType ?? null,
+        mainCrops === undefined ? null : mainCrops.map((crop) => crop.trim()),
       ],
     );
     if (!result.rows[0]) {

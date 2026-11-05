@@ -8,8 +8,8 @@ export function ScoreBadge({ score }: { score: number }) {
   const theme = useTheme();
   return (
     <View style={[styles.badge, { backgroundColor: theme.backgroundSelected }]}>
-      <ThemedText type="smallBold" style={{ color: theme.primary }}>SIMULATION SCORE</ThemedText>
-      <ThemedText style={[styles.score, { color: theme.primary }]}>{score}</ThemedText>
+      <ThemedText type="smallBold" style={{ color: theme.primaryText }}>SIMULATION SCORE</ThemedText>
+      <ThemedText style={[styles.score, { color: theme.primaryText }]}>{score}</ThemedText>
       <ThemedText type="small" themeColor="textSecondary">out of 100</ThemedText>
     </View>
   );

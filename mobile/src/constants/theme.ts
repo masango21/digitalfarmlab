@@ -9,28 +9,47 @@ import { Platform } from 'react-native';
 
 export const Colors = {
   light: {
-    text: '#1B2E1C',
-    background: '#F1F8E9',
+    text: '#24231F',
+    background: '#F5F3EE',
+    backgroundSecondary: '#ECE9E1',
     backgroundElement: '#FFFFFF',
-    backgroundSelected: '#E3F2DE',
-    textSecondary: '#5E6D5F',
-    primary: '#2E7D32',
-    accent: '#66BB6A',
-    border: '#D5E4D2',
+    backgroundSelected: '#EFE6D9',
+    card: '#FFFFFF',
+    textSecondary: '#6E6B63',
+    primary: '#795438',
+    primaryText: '#795438',
+    accent: '#D6AE55',
+    success: '#4F7F46',
+    warning: '#9A681A',
+    error: '#B45048',
+    border: '#DEDAD0',
   },
   dark: {
-    text: '#F1F8E9',
-    background: '#1B2E1C',
-    backgroundElement: '#263B27',
-    backgroundSelected: '#304A32',
-    textSecondary: '#B8C8B9',
-    primary: '#A5D6A7',
-    accent: '#66BB6A',
-    border: '#3C5540',
+    text: '#FFFFFF',
+    background: '#10110F',
+    backgroundSecondary: '#1B1C19',
+    backgroundElement: '#25251F',
+    backgroundSelected: '#3A3327',
+    card: '#25251F',
+    textSecondary: '#A6A69F',
+    primary: '#795438',
+    primaryText: '#D6AE55',
+    accent: '#D6AE55',
+    success: '#86B879',
+    warning: '#E2B55A',
+    error: '#E58B83',
+    border: '#3B3B34',
   },
 } as const;
 
 export type ThemeColor = keyof typeof Colors.light & keyof typeof Colors.dark;
+
+export const Radii = {
+  small: 10,
+  medium: 14,
+  large: 20,
+  pill: 999,
+} as const;
 
 export const Fonts = Platform.select({
   ios: {

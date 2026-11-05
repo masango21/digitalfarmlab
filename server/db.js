@@ -11,7 +11,9 @@ pool.on('error', (error) => {
 
 async function query(text, values) {
   if (!process.env.DATABASE_URL) {
-    throw new Error('DATABASE_URL is not configured');
+    const error = new Error('DATABASE_URL is not configured');
+    error.statusCode = 503;
+    throw error;
   }
   return pool.query(text, values);
 }

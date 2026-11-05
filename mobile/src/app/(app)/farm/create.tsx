@@ -4,11 +4,13 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
+import { FarmProfileAttributes } from '@/components/farm-profile-attributes';
 import { AppScreen } from '@/components/ui/app-screen';
 import { PrimaryButton } from '@/components/ui/primary-button';
-import { Colors, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { apiRequest } from '@/lib/api';
-import { productionSystems, type ProductionSystem } from '@/lib/farm';
+import { productionSystems, type FarmType, type ProductionSystem } from '@/lib/farm';
 
 function coordinateValue(value: string) {
   if (!value.trim()) return null;
@@ -17,12 +19,16 @@ function coordinateValue(value: string) {
 }
 
 export default function CreateFarmScreen() {
+  const theme = useTheme();
   const [name, setName] = useState('');
   const [location, setLocation] = useState('');
   const [area, setArea] = useState('');
   const [latitude, setLatitude] = useState('');
   const [longitude, setLongitude] = useState('');
   const [productionSystem, setProductionSystem] = useState<ProductionSystem>('mixed');
+  const [region, setRegion] = useState('');
+  const [farmType, setFarmType] = useState<FarmType>('mixed');
+  const [mainCrops, setMainCrops] = useState<string[]>([]);
   const [imageUri, setImageUri] = useState<string | null>(null);
   const [createdFarmId, setCreatedFarmId] = useState<string | null>(null);
   const [error, setError] = useState('');
@@ -61,6 +67,9 @@ export default function CreateFarmScreen() {
             latitude: coordinateValue(latitude),
             longitude: coordinateValue(longitude),
             productionSystem,
+            region: region.trim() || null,
+            farmType,
+            mainCrops,
           }),
         });
         farmId = response.farm.id;
@@ -84,11 +93,11 @@ export default function CreateFarmScreen() {
     <AppScreen title="Add a farm" subtitle="You can add fields and crops after creating it.">
       <View style={styles.form}>
         <ThemedText type="smallBold">Farm name</ThemedText>
-        <TextInput value={name} onChangeText={setName} editable={!createdFarmId} placeholder="e.g. Green Valley Farm" style={styles.input} />
+        <TextInput value={name} onChangeText={setName} editable={!createdFarmId} placeholder="e.g. Green Valley Farm" placeholderTextColor={theme.textSecondary} style={[styles.input, { borderColor: theme.border, backgroundColor: theme.card, color: theme.text }]} />
         <ThemedText type="smallBold">Location</ThemedText>
-        <TextInput value={location} onChangeText={setLocation} placeholder="Town or region" style={styles.input} />
+        <TextInput value={location} onChangeText={setLocation} placeholder="Town or region" placeholderTextColor={theme.textSecondary} style={[styles.input, { borderColor: theme.border, backgroundColor: theme.card, color: theme.text }]} />
         <ThemedText type="smallBold">Area (hectares)</ThemedText>
-        <TextInput value={area} onChangeText={setArea} keyboardType="decimal-pad" placeholder="0" style={styles.input} />
+        <TextInput value={area} onChangeText={setArea} keyboardType="decimal-pad" placeholder="0" placeholderTextColor={theme.textSecondary} style={[styles.input, { borderColor: theme.border, backgroundColor: theme.card, color: theme.text }]} />
         <ThemedText type="smallBold">Water system</ThemedText>
         <View style={styles.options}>
           {productionSystems.map((system) => (
@@ -99,21 +108,30 @@ export default function CreateFarmScreen() {
               onPress={() => setProductionSystem(system.value)}
               style={[
                 styles.option,
-                productionSystem === system.value && styles.optionSelected,
+                { borderColor: theme.border, backgroundColor: theme.card },
+                productionSystem === system.value && { borderColor: theme.primary, backgroundColor: theme.backgroundSelected },
               ]}>
               <ThemedText type="smallBold">{system.label}</ThemedText>
               <ThemedText type="small" themeColor="textSecondary">{system.description}</ThemedText>
             </Pressable>
           ))}
         </View>
+        <FarmProfileAttributes
+          region={region}
+          farmType={farmType}
+          mainCrops={mainCrops}
+          onRegionChange={setRegion}
+          onFarmTypeChange={setFarmType}
+          onMainCropsChange={setMainCrops}
+        />
         <ThemedText type="smallBold">Latitude (optional, for map pins)</ThemedText>
-        <TextInput value={latitude} onChangeText={setLatitude} keyboardType="decimal-pad" placeholder="e.g. -25.75" style={styles.input} />
+        <TextInput value={latitude} onChangeText={setLatitude} keyboardType="decimal-pad" placeholder="e.g. -25.75" placeholderTextColor={theme.textSecondary} style={[styles.input, { borderColor: theme.border, backgroundColor: theme.card, color: theme.text }]} />
         <ThemedText type="smallBold">Longitude (optional, for map pins)</ThemedText>
-        <TextInput value={longitude} onChangeText={setLongitude} keyboardType="decimal-pad" placeholder="e.g. 28.19" style={styles.input} />
-        <Pressable onPress={chooseImage} style={styles.imageButton}>
+        <TextInput value={longitude} onChangeText={setLongitude} keyboardType="decimal-pad" placeholder="e.g. 28.19" placeholderTextColor={theme.textSecondary} style={[styles.input, { borderColor: theme.border, backgroundColor: theme.card, color: theme.text }]} />
+        <Pressable onPress={chooseImage} style={[styles.imageButton, { borderColor: theme.border }]}>
           <ThemedText type="smallBold">{imageUri ? 'Change farm image' : 'Choose farm image'}</ThemedText>
         </Pressable>
-        {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}
+        {error ? <ThemedText style={{ color: theme.error }}>{error}</ThemedText> : null}
         <PrimaryButton onPress={submit} disabled={saving}>{saving ? 'Saving…' : createdFarmId ? 'Retry image upload' : 'Create farm'}</PrimaryButton>
       </View>
     </AppScreen>
@@ -122,10 +140,8 @@ export default function CreateFarmScreen() {
 
 const styles = StyleSheet.create({
   form: { gap: Spacing.two },
-  input: { borderWidth: 1, borderColor: Colors.light.border, backgroundColor: '#FFFFFF', padding: Spacing.three, borderRadius: 14, color: Colors.light.text },
-  imageButton: { borderWidth: 1, borderColor: Colors.light.border, padding: Spacing.three, borderRadius: 14, alignItems: 'center' },
+  input: { borderWidth: 1, padding: Spacing.three, borderRadius: 14 },
+  imageButton: { borderWidth: 1, padding: Spacing.three, borderRadius: 14, alignItems: 'center' },
   options: { gap: Spacing.two },
-  option: { gap: Spacing.one, borderWidth: 1, borderColor: Colors.light.border, borderRadius: 14, padding: Spacing.three, backgroundColor: '#FFFFFF' },
-  optionSelected: { borderColor: Colors.light.primary, backgroundColor: Colors.light.backgroundSelected },
-  error: { color: '#B3261E' },
+  option: { gap: Spacing.one, borderWidth: 1, borderRadius: 14, padding: Spacing.three },
 });

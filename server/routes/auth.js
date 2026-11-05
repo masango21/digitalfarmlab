@@ -3,7 +3,8 @@ const bcrypt = require('bcryptjs');
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const { query, pool } = require('../db');
-const { requireSecret } = require('../middleware/auth');
+const { requireAuth, requireRole, requireSecret } = require('../middleware/auth');
+const { validateRegistrationRole, validateUserRole } = require('../lib/auth-validation');
 
 const router = express.Router();
 const publicUserFields = 'id, display_name, email, role, avatar_url, created_at';
@@ -13,7 +14,7 @@ function tokenHash(token) {
 }
 
 function createTokens(user) {
-  const claims = { sub: user.id, role: user.role };
+  const claims = { sub: user.id };
   const accessToken = jwt.sign(
     { ...claims, tokenType: 'access' },
     requireSecret('JWT_SECRET'),
@@ -35,7 +36,7 @@ async function saveRefreshToken(client, userId, token) {
 }
 
 router.post('/register', async (req, res, next) => {
-  const { displayName, email, password, role = 'learner' } = req.body || {};
+  const { displayName, email, password, role } = req.body || {};
   const normalizedEmail = typeof email === 'string' ? email.trim().toLowerCase() : '';
 
   if (typeof displayName !== 'string' || displayName.trim().length < 2 || displayName.trim().length > 100) {
@@ -50,8 +51,9 @@ router.post('/register', async (req, res, next) => {
     res.status(400).json({ error: 'Password must be between 8 and 72 characters' });
     return;
   }
-  if (role !== 'learner' && role !== 'trainer') {
-    res.status(400).json({ error: 'Role must be learner or trainer' });
+  const roleError = validateRegistrationRole(role);
+  if (roleError) {
+    res.status(400).json({ error: roleError });
     return;
   }
 
@@ -63,7 +65,7 @@ router.post('/register', async (req, res, next) => {
       const result = await client.query(
         `INSERT INTO users (display_name, email, password_hash, role)
          VALUES ($1, $2, $3, $4) RETURNING ${publicUserFields}`,
-        [displayName.trim(), normalizedEmail, passwordHash, role],
+        [displayName.trim(), normalizedEmail, passwordHash, 'learner'],
       );
       const user = result.rows[0];
       const tokens = createTokens(user);
@@ -82,6 +84,63 @@ router.post('/register', async (req, res, next) => {
     }
   } catch (error) {
     next(error);
+  }
+});
+
+router.patch('/users/:id/role', requireAuth, requireRole('admin'), async (req, res, next) => {
+  const userId = req.params.id;
+  const { role } = req.body || {};
+  const roleError = validateUserRole(role);
+  if (roleError) {
+    res.status(400).json({ error: roleError });
+    return;
+  }
+  if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(userId)) {
+    res.status(400).json({ error: 'A valid user ID is required' });
+    return;
+  }
+  if (userId.toLowerCase() === req.user.id.toLowerCase()) {
+    res.status(400).json({ error: 'Administrators cannot change their own role' });
+    return;
+  }
+
+  const client = await pool.connect();
+  try {
+    await client.query('BEGIN');
+    await client.query('SELECT pg_advisory_xact_lock(684231)');
+    const target = await client.query('SELECT id, role FROM users WHERE id = $1 FOR UPDATE', [userId]);
+    if (!target.rows[0]) {
+      await client.query('ROLLBACK');
+      res.status(404).json({ error: 'User not found' });
+      return;
+    }
+
+    if (target.rows[0].role === 'admin' && role !== 'admin') {
+      const admins = await client.query("SELECT COUNT(*)::int AS count FROM users WHERE role = 'admin'");
+      if (admins.rows[0].count <= 1) {
+        await client.query('ROLLBACK');
+        res.status(409).json({ error: 'The last administrator cannot be demoted' });
+        return;
+      }
+    }
+
+    const result = await client.query(
+      `UPDATE users SET role = $2, updated_at = now()
+       WHERE id = $1
+       RETURNING id, display_name, email, role, avatar_url, created_at`,
+      [userId, role],
+    );
+    await client.query(
+      'UPDATE refresh_sessions SET revoked_at = now() WHERE user_id = $1 AND revoked_at IS NULL',
+      [userId],
+    );
+    await client.query('COMMIT');
+    res.json({ user: result.rows[0] });
+  } catch (error) {
+    await client.query('ROLLBACK');
+    next(error);
+  } finally {
+    client.release();
   }
 });
 

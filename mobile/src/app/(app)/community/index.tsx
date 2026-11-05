@@ -5,7 +5,7 @@ import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { AppScreen } from '@/components/ui/app-screen';
 import { PrimaryButton } from '@/components/ui/primary-button';
-import { Colors, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { apiRequest } from '@/lib/api';
 
@@ -73,15 +73,15 @@ export default function CommunityScreen() {
   return (
     <AppScreen title="Community" subtitle="Share a discovery or learn from other farmers.">
       <View style={[styles.composer, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
-        <TextInput value={body} onChangeText={setBody} multiline maxLength={5000} placeholder="What are you learning on your farm?" style={styles.postInput} />
+        <TextInput value={body} onChangeText={setBody} multiline maxLength={5000} placeholder="What are you learning on your farm?" placeholderTextColor={theme.textSecondary} style={[styles.postInput, { color: theme.text }]} />
         <PrimaryButton onPress={createPost} disabled={!body.trim()}>Share post</PrimaryButton>
       </View>
-      {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}
+      {error ? <ThemedText style={{ color: theme.error }}>{error}</ThemedText> : null}
       {!posts.length && !error ? <ThemedText themeColor="textSecondary">No posts yet. Start the conversation.</ThemedText> : null}
       {posts.map((post) => (
         <View key={post.id} style={[styles.post, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
           <View style={styles.author}>
-            {post.avatar_url ? <Image source={{ uri: post.avatar_url }} style={styles.avatar} /> : <View style={[styles.avatar, styles.avatarFallback]}><ThemedText type="smallBold">{post.display_name.slice(0, 1)}</ThemedText></View>}
+            {post.avatar_url ? <Image source={{ uri: post.avatar_url }} style={styles.avatar} /> : <View style={[styles.avatar, styles.avatarFallback, { backgroundColor: theme.backgroundSelected }]}><ThemedText type="smallBold">{post.display_name.slice(0, 1)}</ThemedText></View>}
             <View style={styles.authorCopy}>
               <ThemedText type="smallBold">{post.display_name}</ThemedText>
               <ThemedText type="small" themeColor="textSecondary">{new Date(post.created_at).toLocaleDateString()}</ThemedText>
@@ -90,17 +90,18 @@ export default function CommunityScreen() {
           <ThemedText>{post.body}</ThemedText>
           {post.image_url ? <Image source={{ uri: post.image_url }} contentFit="cover" style={styles.postImage} /> : null}
           <View style={styles.actions}>
-            <Pressable onPress={() => toggleLike(post.id)}><ThemedText type="smallBold" style={{ color: theme.primary }}>♥ {post.like_count} likes</ThemedText></Pressable>
+            <Pressable onPress={() => toggleLike(post.id)}><ThemedText type="smallBold" style={{ color: theme.primaryText }}>♥ {post.like_count} likes</ThemedText></Pressable>
             <ThemedText type="small" themeColor="textSecondary">{post.comment_count} comments</ThemedText>
           </View>
-          <View style={styles.commentForm}>
+          <View style={[styles.commentForm, { borderTopColor: theme.border }]}>
             <TextInput
               value={comments[post.id] ?? ''}
               onChangeText={(value) => setComments((current) => ({ ...current, [post.id]: value }))}
               placeholder="Add a comment"
-              style={styles.commentInput}
+              placeholderTextColor={theme.textSecondary}
+              style={[styles.commentInput, { color: theme.text }]}
             />
-            <Pressable onPress={() => addComment(post.id)}><ThemedText type="smallBold" style={{ color: theme.primary }}>Send</ThemedText></Pressable>
+            <Pressable onPress={() => addComment(post.id)}><ThemedText type="smallBold" style={{ color: theme.primaryText }}>Send</ThemedText></Pressable>
           </View>
         </View>
       ))}
@@ -110,15 +111,14 @@ export default function CommunityScreen() {
 
 const styles = StyleSheet.create({
   composer: { padding: Spacing.three, gap: Spacing.two, borderRadius: 18, borderWidth: 1 },
-  postInput: { minHeight: 72, textAlignVertical: 'top', color: Colors.light.text },
+  postInput: { minHeight: 72, textAlignVertical: 'top' },
   post: { padding: Spacing.three, gap: Spacing.two, borderRadius: 18, borderWidth: 1 },
   author: { flexDirection: 'row', gap: Spacing.two, alignItems: 'center' },
   avatar: { width: 38, height: 38, borderRadius: 19 },
-  avatarFallback: { backgroundColor: '#E3F2DE', alignItems: 'center', justifyContent: 'center' },
+  avatarFallback: { alignItems: 'center', justifyContent: 'center' },
   authorCopy: { gap: 2 },
   postImage: { width: '100%', height: 200, borderRadius: 14 },
   actions: { flexDirection: 'row', justifyContent: 'space-between' },
-  commentForm: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, borderTopWidth: StyleSheet.hairlineWidth, borderTopColor: Colors.light.border, paddingTop: Spacing.two },
-  commentInput: { flex: 1, paddingVertical: Spacing.one, color: Colors.light.text },
-  error: { color: '#B3261E' },
+  commentForm: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two, borderTopWidth: StyleSheet.hairlineWidth, paddingTop: Spacing.two },
+  commentInput: { flex: 1, paddingVertical: Spacing.one },
 });

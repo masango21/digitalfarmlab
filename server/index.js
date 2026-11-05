@@ -2,26 +2,36 @@ require('dotenv').config();
 
 const cors = require('cors');
 const express = require('express');
+const analyticsRoutes = require('./routes/analytics');
 const authRoutes = require('./routes/auth');
 const cohortRoutes = require('./routes/cohorts');
 const communityRoutes = require('./routes/community');
+const cropLibraryRoutes = require('./routes/crop-library');
+const dashboardRoutes = require('./routes/dashboard');
 const farmRoutes = require('./routes/farms');
 const fieldRecordRoutes = require('./routes/field-records');
+const journalRoutes = require('./routes/journal');
+const leaderboardRoutes = require('./routes/leaderboard');
 const marketRoutes = require('./routes/market');
 const notificationRoutes = require('./routes/notifications');
 const profileRoutes = require('./routes/profile');
+const reportsRoutes = require('./routes/reports');
 const scenarioRoutes = require('./routes/scenarios');
 
 const app = express();
-const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:8081,http://localhost:8098,http://localhost:19006')
+const allowedOrigins = (process.env.ALLOWED_ORIGINS || 'http://localhost:8081,http://localhost:8082,http://localhost:8083,http://localhost:8084,http://localhost:8098,http://localhost:19006')
   .split(',')
   .map((origin) => origin.trim())
   .filter(Boolean);
 
+function isAllowedLocalOrigin(origin) {
+  return /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/.test(origin || '');
+}
+
 app.disable('x-powered-by');
 app.use(cors({
   origin(origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
+    if (!origin || allowedOrigins.includes(origin) || isAllowedLocalOrigin(origin)) {
       callback(null, true);
       return;
     }
@@ -36,10 +46,16 @@ app.get('/health', (_req, res) => {
 });
 
 app.use('/api/auth', authRoutes);
+app.use('/api/analytics', analyticsRoutes);
+app.use('/api/crop-library', cropLibraryRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 app.use('/api/farms', farmRoutes);
 app.use('/api', fieldRecordRoutes);
 app.use('/api/cohorts', cohortRoutes);
+app.use('/api/journal', journalRoutes);
+app.use('/api/leaderboard', leaderboardRoutes);
 app.use('/api/scenarios', scenarioRoutes);
+app.use('/api/reports', reportsRoutes);
 app.use('/api/market', marketRoutes);
 app.use('/api/community', communityRoutes);
 app.use('/api/notifications', notificationRoutes);

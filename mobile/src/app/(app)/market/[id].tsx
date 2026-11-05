@@ -58,7 +58,7 @@ export default function ProductDetailScreen() {
           <PrimaryButton onPress={order} disabled={working}>{working ? 'Placing order…' : 'Request product'}</PrimaryButton>
         </View>
       ) : <ThemedText themeColor="textSecondary">Loading product…</ThemedText>}
-      {message ? <ThemedText style={{ color: theme.primary }}>{message}</ThemedText> : null}
+      {message ? <ThemedText style={{ color: theme.primaryText }}>{message}</ThemedText> : null}
     </AppScreen>
   );
 }

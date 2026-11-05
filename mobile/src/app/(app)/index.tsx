@@ -5,6 +5,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { AppScreen } from '@/components/ui/app-screen';
 import { FarmCard, type Farm } from '@/components/ui/farm-card';
+import { ContentState } from '@/components/ui/content-state';
 import { PrimaryButton } from '@/components/ui/primary-button';
 import { StatCard } from '@/components/ui/stat-card';
 import { Spacing } from '@/constants/theme';
@@ -12,19 +13,34 @@ import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/lib/auth';
 import { apiRequest } from '@/lib/api';
 
-interface RunsResponse {
-  runs: { score: number | string; scenario_name: string; created_at: string }[];
+interface DashboardRun {
+  id: string;
+  scenario_name: string;
+  score: number | string;
+  created_at: string;
 }
 
-interface DashboardProfile {
-  profile: { pending_task_count: number | string };
+interface DashboardResponse {
+  farms: Farm[];
+  summary: {
+    farmCount: number;
+    fieldCount: number;
+    pendingTaskCount: number;
+    lastScore: number | null;
+    lastUpdated: string;
+  };
+  recentRuns: DashboardRun[];
+  dataStatus: {
+    weather: { available: boolean; label: string; source: string };
+    sensors: { available: boolean; label: string; source: string };
+  };
 }
 
 export default function DashboardScreen() {
   const theme = useTheme();
   const { user } = useAuth();
   const [farms, setFarms] = useState<Farm[]>([]);
-  const [runs, setRuns] = useState<RunsResponse['runs']>([]);
+  const [runs, setRuns] = useState<DashboardRun[]>([]);
   const [pendingTasks, setPendingTasks] = useState(0);
   const [error, setError] = useState('');
   const [dashboardLoading, setDashboardLoading] = useState(true);
@@ -34,35 +50,24 @@ export default function DashboardScreen() {
 
   useFocusEffect(useCallback(() => {
     let active = true;
-    Promise.allSettled([
-      apiRequest<{ farms: Farm[] }>('/farms'),
-      apiRequest<RunsResponse>('/scenarios/runs'),
-      apiRequest<DashboardProfile>('/profile'),
-    ]).then(([farmResult, runResult, profileResult]) => {
-      if (!active) return;
-      const failures: string[] = [];
-      if (farmResult.status === 'fulfilled') {
-        setFarms(farmResult.value.farms);
+    apiRequest<DashboardResponse>('/dashboard')
+      .then((response) => {
+        if (!active) return;
+        setFarms(response.farms);
+        setRuns(response.recentRuns);
+        setPendingTasks(response.summary.pendingTaskCount);
         setFarmDataAvailable(true);
-      } else {
-        failures.push(farmResult.reason instanceof Error ? farmResult.reason.message : 'Unable to load farms');
-      }
-      if (runResult.status === 'fulfilled') {
-        setRuns(runResult.value.runs);
-        setRunDataAvailable(true);
-      } else {
-        failures.push(runResult.reason instanceof Error ? runResult.reason.message : 'Unable to load simulations');
-      }
-      if (profileResult.status === 'fulfilled') {
-        setPendingTasks(Number(profileResult.value.profile.pending_task_count));
         setTaskDataAvailable(true);
-      } else {
-        failures.push(profileResult.reason instanceof Error ? profileResult.reason.message : 'Unable to load tasks');
-      }
-      setError(failures.join(' · '));
-    }).finally(() => {
-      if (active) setDashboardLoading(false);
-    });
+        setRunDataAvailable(response.recentRuns.length > 0);
+        setError('');
+      })
+      .catch((loadError: unknown) => {
+        if (!active) return;
+        setError(loadError instanceof Error ? loadError.message : 'Unable to load dashboard');
+      })
+      .finally(() => {
+        if (active) setDashboardLoading(false);
+      });
     return () => {
       active = false;
     };
@@ -75,9 +80,9 @@ export default function DashboardScreen() {
     <AppScreen
       title={`Hello, ${user?.display_name.split(' ')[0] || 'farmer'}`}
       subtitle="Your farm, tasks, and learning at a glance.">
-      {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}
+      {error ? <ThemedText style={{ color: theme.error }}>{error}</ThemedText> : null}
       {dashboardLoading ? (
-        <ThemedText themeColor="textSecondary">Loading farm records…</ThemedText>
+        <ContentState variant="loading" message="Loading farm records…" />
       ) : (
         <View style={styles.stats}>
           <StatCard label="My farms" value={farmDataAvailable ? String(farms.length) : '—'} helper={farmDataAvailable ? 'Farm profiles' : 'Unavailable'} />
@@ -89,7 +94,7 @@ export default function DashboardScreen() {
 
       <View style={styles.sectionHeading}>
         <ThemedText type="smallBold">Farm overview</ThemedText>
-        <Link href="/(app)/farm" style={{ color: theme.primary }}>See all</Link>
+        <Link href="/(app)/farm" style={{ color: theme.primaryText }}>See all</Link>
       </View>
       {dashboardLoading ? null : !farmDataAvailable ? (
         <ThemedText type="small" themeColor="textSecondary">Farm overview is unavailable until your records finish loading.</ThemedText>
@@ -118,7 +123,7 @@ export default function DashboardScreen() {
 
       <View style={styles.sectionHeading}>
         <ThemedText type="smallBold">Recent activity</ThemedText>
-        <Link href="/(app)/simulate/runs" style={{ color: theme.primary }}>See all</Link>
+        <Link href="/(app)/simulate/runs" style={{ color: theme.primaryText }}>See all</Link>
       </View>
       {runs.length ? (
         <View style={[styles.activity, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
@@ -132,6 +137,14 @@ export default function DashboardScreen() {
       )}
 
       <View style={styles.quickActions}>
+        <Pressable onPress={() => router.push('/(app)/crop-library/index')} style={[styles.quickAction, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+          <ThemedText type="smallBold">Crop library</ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">Search crops, profiles, and varieties</ThemedText>
+        </Pressable>
+        <Pressable onPress={() => router.push('/(app)/market')} style={[styles.quickAction, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+          <ThemedText type="smallBold">Marketplace</ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">Browse farm supplies</ThemedText>
+        </Pressable>
         <Pressable onPress={() => router.push('/(app)/community')} style={[styles.quickAction, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
           <ThemedText type="smallBold">Community</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">Share what you learn</ThemedText>
@@ -144,6 +157,10 @@ export default function DashboardScreen() {
           <ThemedText type="smallBold">Notifications</ThemedText>
           <ThemedText type="small" themeColor="textSecondary">See your updates</ThemedText>
         </Pressable>
+        <Pressable onPress={() => router.push('/(app)/labs' as never)} style={[styles.quickAction, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+          <ThemedText type="smallBold">Agri labs</ThemedText>
+          <ThemedText type="small" themeColor="textSecondary">Open the six learning laboratories</ThemedText>
+        </Pressable>
       </View>
     </AppScreen>
   );
@@ -153,12 +170,11 @@ const styles = StyleSheet.create({
   stats: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
   emptyFarm: { padding: Spacing.three, borderRadius: 16, borderWidth: 1, gap: Spacing.two },
   hero: { padding: Spacing.three, borderRadius: 22, gap: Spacing.two },
-  heroEyebrow: { color: '#D5F2D7', letterSpacing: 1 },
+  heroEyebrow: { color: '#D6AE55', letterSpacing: 1 },
   heroTitle: { color: '#FFFFFF', fontSize: 24, lineHeight: 30 },
-  heroCopy: { color: '#EAF5E9' },
+  heroCopy: { color: '#F5F3EE' },
   sectionHeading: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   activity: { borderWidth: 1, borderRadius: 16, padding: Spacing.three, gap: Spacing.one },
   quickActions: { gap: Spacing.two },
   quickAction: { padding: Spacing.three, borderRadius: 16, borderWidth: 1, gap: Spacing.one },
-  error: { color: '#B3261E' },
 });

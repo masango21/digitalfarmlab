@@ -13,9 +13,9 @@ interface StatCardProps {
 export function StatCard({ label, value, helper }: StatCardProps) {
   const theme = useTheme();
   return (
-    <View style={[styles.card, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
+    <View style={[styles.card, { backgroundColor: theme.card, borderColor: theme.border }]}>
       <ThemedText type="small" themeColor="textSecondary">{label}</ThemedText>
-      <ThemedText type="subtitle" style={[styles.value, { color: theme.primary }]}>{value}</ThemedText>
+      <ThemedText type="subtitle" style={[styles.value, { color: theme.primaryText }]}>{value}</ThemedText>
       {helper ? <ThemedText type="small" themeColor="textSecondary">{helper}</ThemedText> : null}
     </View>
   );

@@ -30,7 +30,7 @@ export function ScenarioSlider({
     <View style={styles.container}>
       <View style={styles.labels}>
         <ThemedText type="smallBold">{label}</ThemedText>
-        <ThemedText type="smallBold" style={{ color: theme.primary }}>{value}%</ThemedText>
+        <ThemedText type="smallBold" style={{ color: theme.primaryText }}>{value}%</ThemedText>
       </View>
       <View onLayout={(event) => setTrackWidth(event.nativeEvent.layout.width)}>
         <Pressable
@@ -44,7 +44,7 @@ export function ScenarioSlider({
           style={styles.trackPressable}>
           <View style={[styles.track, { backgroundColor: theme.backgroundSelected }]}>
             <View style={[styles.fill, { width: `${percentage}%`, backgroundColor: theme.accent }]} />
-            <View style={[styles.thumb, { left: `${percentage}%`, backgroundColor: theme.primary, borderColor: theme.backgroundElement }]} />
+            <View style={[styles.thumb, { left: `${percentage}%`, backgroundColor: theme.primaryText, borderColor: theme.backgroundElement }]} />
           </View>
         </Pressable>
       </View>

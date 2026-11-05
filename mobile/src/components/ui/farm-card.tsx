@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
-import { productionSystemLabel, type ProductionSystem } from '@/lib/farm';
+import { farmTypeLabel, productionSystemLabel, type FarmType, type ProductionSystem } from '@/lib/farm';
 
 export interface Farm {
   id: string;
@@ -12,6 +12,9 @@ export interface Farm {
   location: string | null;
   area_hectares: number | string;
   production_system?: ProductionSystem;
+  region?: string | null;
+  farm_type?: FarmType;
+  main_crops?: string[];
   latitude?: number | string | null;
   longitude?: number | string | null;
   image_url: string | null;
@@ -39,10 +42,18 @@ export function FarmCard({ farm, onPress }: FarmCardProps) {
       )}
       <View style={styles.copy}>
         <ThemedText type="smallBold">{farm.name}</ThemedText>
-        <ThemedText type="small" themeColor="textSecondary">{farm.location || 'Location not set'}</ThemedText>
+        <ThemedText type="small" themeColor="textSecondary">
+          {[farm.location, farm.region].filter(Boolean).join(' · ') || 'Location not set'}
+        </ThemedText>
         <ThemedText type="small" themeColor="textSecondary">
           {Number(farm.area_hectares).toLocaleString()} ha · {farm.field_count ?? 0} fields
         </ThemedText>
+        {farm.farm_type ? (
+          <ThemedText type="small" themeColor="textSecondary">{farmTypeLabel(farm.farm_type)}</ThemedText>
+        ) : null}
+        {farm.main_crops?.length ? (
+          <ThemedText type="small" themeColor="textSecondary">{farm.main_crops.join(', ')}</ThemedText>
+        ) : null}
         {farm.production_system ? (
           <ThemedText type="small" themeColor="textSecondary">
             {productionSystemLabel(farm.production_system)}

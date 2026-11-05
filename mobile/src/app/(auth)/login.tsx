@@ -4,10 +4,12 @@ import { KeyboardAvoidingView, Platform, Pressable, StyleSheet, TextInput, View 
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { ThemedText } from '@/components/themed-text';
-import { Colors, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
+import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/lib/auth';
 
 export default function LoginScreen() {
+  const theme = useTheme();
   const { login } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -27,23 +29,23 @@ export default function LoginScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safe}>
+    <SafeAreaView style={[styles.safe, { backgroundColor: theme.background }]}>
       <KeyboardAvoidingView style={styles.container} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ThemedText type="title" style={styles.title}>Welcome back</ThemedText>
+        <ThemedText type="title">Welcome back</ThemedText>
         <ThemedText themeColor="textSecondary">Sign in to pick up where you left off.</ThemedText>
         <View style={styles.form}>
           <ThemedText type="smallBold">Email</ThemedText>
-          <TextInput autoCapitalize="none" autoComplete="email" keyboardType="email-address" value={email} onChangeText={setEmail} placeholder="you@example.com" style={styles.input} />
+          <TextInput autoCapitalize="none" autoComplete="email" keyboardType="email-address" value={email} onChangeText={setEmail} placeholder="you@example.com" placeholderTextColor={theme.textSecondary} style={[styles.input, { borderColor: theme.border, backgroundColor: theme.card, color: theme.text }]} />
           <ThemedText type="smallBold">Password</ThemedText>
-          <TextInput autoComplete="password" secureTextEntry value={password} onChangeText={setPassword} placeholder="Your password" style={styles.input} />
-          {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}
-          <Pressable disabled={submitting} onPress={submit} style={({ pressed }) => [styles.button, pressed && styles.pressed, submitting && styles.disabled]}>
+          <TextInput autoComplete="password" secureTextEntry value={password} onChangeText={setPassword} placeholder="Your password" placeholderTextColor={theme.textSecondary} style={[styles.input, { borderColor: theme.border, backgroundColor: theme.card, color: theme.text }]} />
+          {error ? <ThemedText style={{ color: theme.error }}>{error}</ThemedText> : null}
+          <Pressable accessibilityRole="button" accessibilityState={{ disabled: submitting }} disabled={submitting} onPress={submit} style={({ pressed }) => [styles.button, { backgroundColor: theme.primary }, pressed && styles.pressed, submitting && styles.disabled]}>
             <ThemedText type="smallBold" style={styles.buttonText}>{submitting ? 'Signing in…' : 'Sign in'}</ThemedText>
           </Pressable>
         </View>
         <ThemedText type="small" themeColor="textSecondary" style={styles.footer}>
           New to DigitalFarmLab?{' '}
-          <Link href="/(auth)/register" style={styles.link}>Create an account</Link>
+          <Link href="/(auth)/register" style={[styles.link, { color: theme.primaryText }]}>Create an account</Link>
         </ThemedText>
       </KeyboardAvoidingView>
     </SafeAreaView>
@@ -51,16 +53,14 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  safe: { flex: 1, backgroundColor: Colors.light.background },
+  safe: { flex: 1 },
   container: { flex: 1, justifyContent: 'center', padding: Spacing.four, gap: Spacing.two },
-  title: { fontSize: 34, color: Colors.light.text },
   form: { gap: Spacing.two, marginTop: Spacing.four },
-  input: { borderWidth: 1, borderColor: Colors.light.border, backgroundColor: '#FFFFFF', paddingHorizontal: Spacing.three, paddingVertical: Spacing.three, borderRadius: 14, color: Colors.light.text, marginBottom: Spacing.two },
-  button: { backgroundColor: Colors.light.primary, borderRadius: 14, alignItems: 'center', padding: Spacing.three, marginTop: Spacing.two },
+  input: { borderWidth: 1, paddingHorizontal: Spacing.three, paddingVertical: Spacing.three, borderRadius: 14, marginBottom: Spacing.two },
+  button: { borderRadius: 14, alignItems: 'center', padding: Spacing.three, marginTop: Spacing.two },
   buttonText: { color: '#FFFFFF' },
   pressed: { opacity: 0.8 },
   disabled: { opacity: 0.55 },
-  error: { color: '#B3261E' },
   footer: { textAlign: 'center', marginTop: Spacing.four },
-  link: { color: Colors.light.primary, fontWeight: '700' },
+  link: { fontWeight: '700' },
 });

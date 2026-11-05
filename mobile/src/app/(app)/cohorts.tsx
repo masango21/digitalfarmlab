@@ -4,7 +4,7 @@ import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { AppScreen } from '@/components/ui/app-screen';
 import { PrimaryButton } from '@/components/ui/primary-button';
-import { Colors, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { useTheme } from '@/hooks/use-theme';
 import { useAuth } from '@/lib/auth';
 import { apiRequest } from '@/lib/api';
@@ -100,7 +100,7 @@ export default function CohortsScreen() {
       {user?.role === 'trainer' ? (
         <View style={[styles.panel, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
           <ThemedText type="smallBold">Create a cohort</ThemedText>
-          <TextInput value={name} onChangeText={setName} placeholder="Cohort name" style={styles.input} />
+          <TextInput value={name} onChangeText={setName} placeholder="Cohort name" placeholderTextColor={theme.textSecondary} style={[styles.input, { borderColor: theme.border, backgroundColor: theme.card, color: theme.text }]} />
           <PrimaryButton onPress={createCohort} disabled={working || name.trim().length < 2}>
             {working ? 'Working…' : 'Create cohort'}
           </PrimaryButton>
@@ -108,7 +108,7 @@ export default function CohortsScreen() {
       ) : (
         <View style={[styles.panel, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
           <ThemedText type="smallBold">Join with an invite code</ThemedText>
-          <TextInput value={inviteCode} onChangeText={setInviteCode} autoCapitalize="characters" maxLength={10} placeholder="10-character code" style={styles.input} />
+          <TextInput value={inviteCode} onChangeText={setInviteCode} autoCapitalize="characters" maxLength={10} placeholder="10-character code" placeholderTextColor={theme.textSecondary} style={[styles.input, { borderColor: theme.border, backgroundColor: theme.card, color: theme.text }]} />
           <PrimaryButton onPress={joinCohort} disabled={working || inviteCode.trim().length !== 10}>
             {working ? 'Joining…' : 'Join cohort'}
           </PrimaryButton>
@@ -127,7 +127,7 @@ export default function CohortsScreen() {
             <ThemedText type="smallBold">{cohort.name}</ThemedText>
             <ThemedText type="small" themeColor="textSecondary">{cohort.member_count} learners</ThemedText>
           </View>
-          {cohort.invite_code ? <ThemedText type="smallBold" style={{ color: theme.primary }}>Invite code: {cohort.invite_code}</ThemedText> : null}
+          {cohort.invite_code ? <ThemedText type="smallBold" style={{ color: theme.primaryText }}>Invite code: {cohort.invite_code}</ThemedText> : null}
           {user?.role === 'trainer' ? <ThemedText type="small" themeColor="textSecondary">Tap to review results</ThemedText> : null}
         </Pressable>
       ))}
@@ -153,7 +153,7 @@ export default function CohortsScreen() {
 
 const styles = StyleSheet.create({
   panel: { padding: Spacing.three, gap: Spacing.two, borderRadius: 18, borderWidth: 1 },
-  input: { borderWidth: 1, borderColor: Colors.light.border, backgroundColor: '#FFFFFF', padding: Spacing.three, borderRadius: 12, color: Colors.light.text },
+  input: { borderWidth: 1, padding: Spacing.three, borderRadius: 12 },
   message: { color: '#2E7D32' },
   cohort: { padding: Spacing.three, gap: Spacing.two, borderRadius: 16, borderWidth: 1 },
   cohortTitle: { flexDirection: 'row', justifyContent: 'space-between', gap: Spacing.two },

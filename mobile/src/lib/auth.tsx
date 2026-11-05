@@ -14,7 +14,7 @@ export interface User {
   id: string;
   display_name: string;
   email: string;
-  role: 'learner' | 'trainer';
+  role: 'learner' | 'trainer' | 'admin';
   avatar_url: string | null;
 }
 
@@ -28,7 +28,7 @@ interface AuthContextValue {
   user: User | null;
   ready: boolean;
   login: (email: string, password: string) => Promise<void>;
-  register: (displayName: string, email: string, password: string, role: User['role']) => Promise<void>;
+  register: (displayName: string, email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
 }
 
@@ -83,11 +83,10 @@ export function AuthProvider({ children }: PropsWithChildren) {
     displayName: string,
     email: string,
     password: string,
-    role: User['role'],
   ) => {
     const response = await apiRequest<AuthResponse>('/auth/register', {
       method: 'POST',
-      body: JSON.stringify({ displayName, email, password, role }),
+      body: JSON.stringify({ displayName, email, password }),
       auth: false,
     });
     await saveAuthResponse(response);

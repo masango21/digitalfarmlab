@@ -36,7 +36,7 @@ export default function MarketScreen() {
 
   return (
     <AppScreen title="Marketplace" subtitle="Find useful supplies from the community.">
-      {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}
+      {error ? <ThemedText style={{ color: theme.error }}>{error}</ThemedText> : null}
       <View style={styles.categories}>
         {categories.map((item) => (
           <Pressable
@@ -64,7 +64,7 @@ export default function MarketScreen() {
             <View style={styles.cardCopy}>
               <ThemedText type="smallBold" numberOfLines={1}>{product.name}</ThemedText>
               <ThemedText type="small" themeColor="textSecondary">{product.category}</ThemedText>
-              <ThemedText type="smallBold" style={{ color: theme.primary }}>${Number(product.price).toFixed(2)}</ThemedText>
+              <ThemedText type="smallBold" style={{ color: theme.primaryText }}>${Number(product.price).toFixed(2)}</ThemedText>
             </View>
           </Pressable>
         ))}
@@ -83,5 +83,4 @@ const styles = StyleSheet.create({
   placeholder: { width: '100%', aspectRatio: 1.3, alignItems: 'center', justifyContent: 'center' },
   productMark: { fontSize: 36 },
   cardCopy: { padding: Spacing.two, gap: Spacing.one },
-  error: { color: '#B3261E' },
 });

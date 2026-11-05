@@ -7,7 +7,7 @@ import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { AppScreen } from '@/components/ui/app-screen';
 import { PrimaryButton } from '@/components/ui/primary-button';
-import { Colors, Spacing } from '@/constants/theme';
+import { Spacing } from '@/constants/theme';
 import { apiRequest } from '@/lib/api';
 import {
   cropHealthLabel,
@@ -170,7 +170,7 @@ export default function FieldInspectionsScreen() {
         </ThemedText>
       </View>
 
-      <View style={styles.form}>
+      <View style={[styles.form, { backgroundColor: theme.card }]}>
         <ThemedText type="smallBold">Crop health observation</ThemedText>
         <View style={styles.options}>
           {cropHealthOptions.map((option) => {
@@ -183,7 +183,7 @@ export default function FieldInspectionsScreen() {
                 onPress={() => setCropHealth(option.value)}
                 style={[
                   styles.option,
-                  { borderColor: selected ? theme.primary : theme.border },
+                  { borderColor: selected ? theme.primary : theme.border, backgroundColor: theme.card },
                   selected && { backgroundColor: theme.backgroundSelected },
                 ]}>
                 <ThemedText type="smallBold">{option.label}</ThemedText>
@@ -196,29 +196,32 @@ export default function FieldInspectionsScreen() {
           value={observations}
           onChangeText={setObservations}
           placeholder="Describe visible crop or field conditions"
+          placeholderTextColor={theme.textSecondary}
           multiline
           maxLength={2000}
-          style={[styles.input, styles.multiline]}
+          style={[styles.input, styles.multiline, { borderColor: theme.border, backgroundColor: theme.card, color: theme.text }]}
         />
         <ThemedText type="smallBold">Possible pest observations (optional)</ThemedText>
         <TextInput
           value={pestObservations}
           onChangeText={setPestObservations}
           placeholder="Describe what you noticed; not a diagnosis"
+          placeholderTextColor={theme.textSecondary}
           multiline
           maxLength={1000}
-          style={[styles.input, styles.multiline]}
+          style={[styles.input, styles.multiline, { borderColor: theme.border, backgroundColor: theme.card, color: theme.text }]}
         />
         <ThemedText type="smallBold">Possible disease observations (optional)</ThemedText>
         <TextInput
           value={diseaseObservations}
           onChangeText={setDiseaseObservations}
           placeholder="Describe what you noticed; not a diagnosis"
+          placeholderTextColor={theme.textSecondary}
           multiline
           maxLength={1000}
-          style={[styles.input, styles.multiline]}
+          style={[styles.input, styles.multiline, { borderColor: theme.border, backgroundColor: theme.card, color: theme.text }]}
         />
-        <Pressable onPress={chooseImage} disabled={Boolean(pendingPhotoInspectionId)} style={styles.photoButton}>
+        <Pressable onPress={chooseImage} disabled={Boolean(pendingPhotoInspectionId)} style={[styles.photoButton, { borderColor: theme.border }]}>
           <ThemedText type="smallBold">{imageUri ? 'Choose a different photo' : 'Attach an inspection photo (optional)'}</ThemedText>
         </Pressable>
         {imageUri ? <Image source={{ uri: imageUri }} contentFit="cover" style={styles.preview} /> : null}
@@ -234,15 +237,15 @@ export default function FieldInspectionsScreen() {
         </PrimaryButton>
       </View>
 
-      {error ? <ThemedText style={styles.error}>{error}</ThemedText> : null}
-      {notice ? <ThemedText style={styles.success}>{notice}</ThemedText> : null}
+      {error ? <ThemedText style={{ color: theme.error }}>{error}</ThemedText> : null}
+      {notice ? <ThemedText style={{ color: theme.success }}>{notice}</ThemedText> : null}
       <ThemedText type="smallBold">Inspection history</ThemedText>
       {loading ? <ThemedText themeColor="textSecondary">Loading inspections…</ThemedText> : null}
       {!loading && !error && inspections.length === 0 ? (
         <ThemedText type="small" themeColor="textSecondary">No inspections recorded for this field.</ThemedText>
       ) : null}
       {inspections.map((inspection) => (
-        <View key={inspection.id} style={styles.record}>
+        <View key={inspection.id} style={[styles.record, { backgroundColor: theme.card }]}>
           <View style={styles.recordHeading}>
             <ThemedText type="smallBold">{cropHealthLabel(inspection.crop_health)}</ThemedText>
             <ThemedText type="small" themeColor="textSecondary">
@@ -267,15 +270,13 @@ export default function FieldInspectionsScreen() {
 
 const styles = StyleSheet.create({
   notice: { padding: Spacing.three, borderRadius: 16, gap: Spacing.one },
-  form: { padding: Spacing.three, borderRadius: 16, backgroundColor: '#FFFFFF', gap: Spacing.two },
+  form: { padding: Spacing.three, borderRadius: 16, gap: Spacing.two },
   options: { flexDirection: 'row', flexWrap: 'wrap', gap: Spacing.two },
-  option: { borderWidth: 1, borderRadius: 14, paddingHorizontal: Spacing.two, paddingVertical: Spacing.two, backgroundColor: '#FFFFFF' },
-  input: { borderWidth: 1, borderColor: Colors.light.border, backgroundColor: '#FFFFFF', padding: Spacing.two, borderRadius: 12, color: Colors.light.text },
+  option: { borderWidth: 1, borderRadius: 14, paddingHorizontal: Spacing.two, paddingVertical: Spacing.two },
+  input: { borderWidth: 1, padding: Spacing.two, borderRadius: 12 },
   multiline: { minHeight: 88, textAlignVertical: 'top' },
-  photoButton: { alignItems: 'center', borderWidth: 1, borderColor: Colors.light.border, padding: Spacing.three, borderRadius: 14 },
-  preview: { width: '100%', height: 220, borderRadius: 14, backgroundColor: '#E3F2DE' },
-  record: { padding: Spacing.three, borderRadius: 16, backgroundColor: '#FFFFFF', gap: Spacing.two },
+  photoButton: { alignItems: 'center', borderWidth: 1, padding: Spacing.three, borderRadius: 14 },
+  preview: { width: '100%', height: 220, borderRadius: 14 },
+  record: { padding: Spacing.three, borderRadius: 16, gap: Spacing.two },
   recordHeading: { flexDirection: 'row', flexWrap: 'wrap', justifyContent: 'space-between', gap: Spacing.two },
-  error: { color: '#B3261E' },
-  success: { color: '#2E7D32' },
 });

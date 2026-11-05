@@ -16,8 +16,8 @@ export default function OnboardingScreen() {
   return (
     <SafeAreaView style={[styles.screen, { backgroundColor: theme.background }]}>
       <ScrollView contentContainerStyle={styles.content}>
-        <View style={[styles.brandMark, { backgroundColor: theme.primary }]}><ThemedText style={[styles.markText, { color: theme.background }]}>DF</ThemedText></View>
-        <ThemedText type="smallBold" style={[styles.eyebrow, { color: theme.primary }]}>DIGITAL FARMLAB</ThemedText>
+        <View style={[styles.brandMark, { backgroundColor: theme.primary }]}><ThemedText style={[styles.markText, { color: '#FFFFFF' }]}>DF</ThemedText></View>
+        <ThemedText type="smallBold" style={[styles.eyebrow, { color: theme.primaryText }]}>DIGITAL FARMLAB</ThemedText>
         <ThemedText type="title" style={[styles.title, { color: theme.text }]}>Grow ideas.{'\n'}See what changes.</ThemedText>
         <ThemedText themeColor="textSecondary" style={styles.intro}>
           A hands-on farm simulation for curious growers and future farmers.
@@ -26,7 +26,7 @@ export default function OnboardingScreen() {
         <View style={styles.highlights}>
           {highlights.map((item) => (
             <View key={item.number} style={[styles.highlight, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]}>
-              <ThemedText type="smallBold" style={{ color: theme.primary }}>{item.number}</ThemedText>
+              <ThemedText type="smallBold" style={{ color: theme.primaryText }}>{item.number}</ThemedText>
               <View style={styles.highlightCopy}>
                 <ThemedText type="smallBold">{item.title}</ThemedText>
                 <ThemedText type="small" themeColor="textSecondary">{item.detail}</ThemedText>
@@ -39,12 +39,12 @@ export default function OnboardingScreen() {
           <ThemedText
             accessibilityRole="button"
             onPress={() => router.push('/(auth)/login')}
-            style={[styles.primaryButton, { backgroundColor: theme.primary, color: theme.background }]}>
+            style={[styles.primaryButton, { backgroundColor: theme.primary, color: '#FFFFFF' }]}>
             Get started
           </ThemedText>
           <ThemedText type="small" themeColor="textSecondary" style={styles.signIn}>
             Already have an account?{' '}
-            <ThemedText type="smallBold" style={{ color: theme.primary }} onPress={() => router.push('/(auth)/login')}>
+            <ThemedText type="smallBold" style={{ color: theme.primaryText }} onPress={() => router.push('/(auth)/login')}>
               Sign in
             </ThemedText>
           </ThemedText>

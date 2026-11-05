@@ -3,7 +3,7 @@ CREATE TABLE IF NOT EXISTS users (
   display_name TEXT NOT NULL,
   email TEXT NOT NULL UNIQUE,
   password_hash TEXT NOT NULL,
-  role TEXT NOT NULL CHECK (role IN ('learner', 'trainer')),
+  role TEXT NOT NULL CHECK (role IN ('learner', 'trainer', 'admin')),
   avatar_url TEXT,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
   updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
@@ -26,6 +26,14 @@ CREATE TABLE IF NOT EXISTS farms (
   area_hectares NUMERIC(10, 2) NOT NULL DEFAULT 0 CHECK (area_hectares >= 0),
   production_system TEXT NOT NULL DEFAULT 'mixed'
     CHECK (production_system IN ('rainfed', 'irrigated', 'mixed')),
+  region TEXT CONSTRAINT farms_region_length
+    CHECK (region IS NULL OR length(btrim(region)) BETWEEN 1 AND 100),
+  farm_type TEXT NOT NULL DEFAULT 'mixed'
+    CONSTRAINT farms_farm_type_allowed
+    CHECK (farm_type IN ('smallholder', 'commercial', 'subsistence', 'research', 'educational', 'mixed')),
+  main_crops TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[]
+    CONSTRAINT farms_main_crops_limit
+    CHECK (cardinality(main_crops) <= 20 AND array_position(main_crops, '') IS NULL),
   latitude DOUBLE PRECISION,
   longitude DOUBLE PRECISION,
   image_url TEXT,
@@ -37,8 +45,35 @@ ALTER TABLE farms ADD COLUMN IF NOT EXISTS latitude DOUBLE PRECISION;
 ALTER TABLE farms ADD COLUMN IF NOT EXISTS longitude DOUBLE PRECISION;
 ALTER TABLE farms ADD COLUMN IF NOT EXISTS production_system TEXT NOT NULL DEFAULT 'mixed'
   CHECK (production_system IN ('rainfed', 'irrigated', 'mixed'));
+ALTER TABLE farms ADD COLUMN IF NOT EXISTS region TEXT;
+ALTER TABLE farms ADD COLUMN IF NOT EXISTS farm_type TEXT NOT NULL DEFAULT 'mixed';
+ALTER TABLE farms ADD COLUMN IF NOT EXISTS main_crops TEXT[] NOT NULL DEFAULT ARRAY[]::TEXT[];
 DO $$
 BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'farms_region_length'
+      AND conrelid = 'farms'::regclass
+  ) THEN
+    ALTER TABLE farms ADD CONSTRAINT farms_region_length
+      CHECK (region IS NULL OR length(btrim(region)) BETWEEN 1 AND 100);
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'farms_farm_type_allowed'
+      AND conrelid = 'farms'::regclass
+  ) THEN
+    ALTER TABLE farms ADD CONSTRAINT farms_farm_type_allowed
+      CHECK (farm_type IN ('smallholder', 'commercial', 'subsistence', 'research', 'educational', 'mixed'));
+  END IF;
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'farms_main_crops_limit'
+      AND conrelid = 'farms'::regclass
+  ) THEN
+    ALTER TABLE farms ADD CONSTRAINT farms_main_crops_limit
+      CHECK (cardinality(main_crops) <= 20 AND array_position(main_crops, '') IS NULL);
+  END IF;
   IF NOT EXISTS (
     SELECT 1 FROM pg_constraint
     WHERE conname = 'farms_coordinates_pair'
@@ -86,6 +121,44 @@ CREATE TABLE IF NOT EXISTS crops (
   expected_harvest_at DATE,
   created_at TIMESTAMPTZ NOT NULL DEFAULT now()
 );
+
+CREATE TABLE IF NOT EXISTS crop_library (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL,
+  category TEXT NOT NULL CHECK (category IN (
+    'cereals_grains', 'legumes_pulses', 'root_tubers', 'vegetables', 'fruit_crops',
+    'oilseed_industrial', 'fodder_pasture', 'herbs_spices', 'nuts_tree', 'ornamental_nursery'
+  )),
+  scientific_name TEXT,
+  description TEXT,
+  profile JSONB NOT NULL DEFAULT '{}'::jsonb,
+  information_status TEXT NOT NULL DEFAULT 'unknown'
+    CHECK (information_status IN ('unknown', 'estimated', 'verified')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS crop_library_name_category_unique
+  ON crop_library (lower(name), category);
+CREATE INDEX IF NOT EXISTS crop_library_category_name_idx
+  ON crop_library (category, lower(name));
+
+CREATE TABLE IF NOT EXISTS crop_library_varieties (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  crop_id UUID NOT NULL REFERENCES crop_library(id) ON DELETE CASCADE,
+  name TEXT NOT NULL,
+  region TEXT,
+  notes TEXT,
+  information_status TEXT NOT NULL DEFAULT 'unknown'
+    CHECK (information_status IN ('unknown', 'estimated', 'verified')),
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+
+CREATE UNIQUE INDEX IF NOT EXISTS crop_library_variety_name_region_unique
+  ON crop_library_varieties (crop_id, lower(name), lower(COALESCE(region, '')));
+CREATE INDEX IF NOT EXISTS crop_library_varieties_crop_region_idx
+  ON crop_library_varieties (crop_id, lower(region), lower(name));
 
 ALTER TABLE crops ADD COLUMN IF NOT EXISTS variety TEXT;
 ALTER TABLE crops ADD COLUMN IF NOT EXISTS growth_stage TEXT;

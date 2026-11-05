@@ -6,14 +6,14 @@
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "digitalfarmlab",
-    "primaryColor": "#2E7D32",
+    "primaryColor": "#795438",
     "userInterfaceStyle": "automatic",
     "ios": {
       "icon": "./assets/expo.icon"
     },
     "android": {
       "adaptiveIcon": {
-        "backgroundColor": "#F1F8E9",
+        "backgroundColor": "#10110F",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -35,7 +35,7 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#F1F8E9",
+          "backgroundColor": "#10110F",
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }

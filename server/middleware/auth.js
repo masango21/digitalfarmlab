@@ -1,4 +1,6 @@
+const { query } = require('../db');
 const jwt = require('jsonwebtoken');
+const { requireRole } = require('../lib/authorization');
 
 function requireSecret(name) {
   const secret = process.env[name];
@@ -8,7 +10,7 @@ function requireSecret(name) {
   return secret;
 }
 
-function requireAuth(req, res, next) {
+async function requireAuth(req, res, next) {
   const authorization = req.get('authorization');
   const match = authorization && authorization.match(/^Bearer\s+(.+)$/i);
   if (!match) {
@@ -23,12 +25,18 @@ function requireAuth(req, res, next) {
       audience: 'digitalfarmlab-mobile',
     });
 
-    if (typeof payload !== 'object' || payload.tokenType !== 'access' || !payload.sub) {
+    if (typeof payload !== 'object' || payload.tokenType !== 'access' || typeof payload.sub !== 'string') {
       res.status(401).json({ error: 'Invalid access token' });
       return;
     }
 
-    req.user = { id: payload.sub, role: payload.role };
+    const result = await query('SELECT id, role FROM users WHERE id = $1', [payload.sub]);
+    if (!result.rows[0]) {
+      res.status(401).json({ error: 'Account no longer exists' });
+      return;
+    }
+
+    req.user = { id: result.rows[0].id, role: result.rows[0].role };
     next();
   } catch (error) {
     if (error instanceof jwt.JsonWebTokenError || error instanceof jwt.TokenExpiredError) {
@@ -39,4 +47,4 @@ function requireAuth(req, res, next) {
   }
 }
 
-module.exports = { requireAuth, requireSecret };
+module.exports = { requireAuth, requireRole, requireSecret };
